@@ -1,9 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace GildedRoseKata;
 
 public class GildedRose
 {
+    private int MaxQuality = 40;
+    private int MinQuality = 0;
+
     IList<Item> Items;
 
     public GildedRose(IList<Item> Items)
@@ -13,77 +17,66 @@ public class GildedRose
 
     public void UpdateQuality()
     {
-        for (var i = 0; i < Items.Count; i++)
+        foreach (var item in Items)
         {
-            if (Items[i].Name != "Aged Brie" && Items[i].Name != "Backstage passes to a TAFKAL80ETC concert")
-            {
-                if (Items[i].Quality > 0)
-                {
-                    if (Items[i].Name != "Sulfuras, Hand of Ragnaros")
-                    {
-                        Items[i].Quality = Items[i].Quality - 1;
-                    }
-                }
-            }
-            else
-            {
-                if (Items[i].Quality < 50)
-                {
-                    Items[i].Quality = Items[i].Quality + 1;
+            var qualityChange = CalcQualityChange(item);
+            item.Quality = Math.Clamp(item.Quality + qualityChange, MinQuality, MaxQuality);
 
-                    if (Items[i].Name == "Backstage passes to a TAFKAL80ETC concert")
-                    {
-                        if (Items[i].SellIn < 11)
-                        {
-                            if (Items[i].Quality < 50)
-                            {
-                                Items[i].Quality = Items[i].Quality + 1;
-                            }
-                        }
-
-                        if (Items[i].SellIn < 6)
-                        {
-                            if (Items[i].Quality < 50)
-                            {
-                                Items[i].Quality = Items[i].Quality + 1;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (Items[i].Name != "Sulfuras, Hand of Ragnaros")
+            if (item.Name != ItemName.Sulfuras)
             {
-                Items[i].SellIn = Items[i].SellIn - 1;
-            }
-
-            if (Items[i].SellIn < 0)
-            {
-                if (Items[i].Name != "Aged Brie")
-                {
-                    if (Items[i].Name != "Backstage passes to a TAFKAL80ETC concert")
-                    {
-                        if (Items[i].Quality > 0)
-                        {
-                            if (Items[i].Name != "Sulfuras, Hand of Ragnaros")
-                            {
-                                Items[i].Quality = Items[i].Quality - 1;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Items[i].Quality = Items[i].Quality - Items[i].Quality;
-                    }
-                }
-                else
-                {
-                    if (Items[i].Quality < 50)
-                    {
-                        Items[i].Quality = Items[i].Quality + 1;
-                    }
-                }
+                item.SellIn--;
             }
         }
+    }
+
+    private int CalcQualityChange(Item item)
+    {
+        switch (item.Name)
+        {
+            case ItemName.AgedBrie:
+                return CalcQualityChange_AgedBrie(item);
+            case ItemName.Sulfuras:
+                return CalcQualityChange_Legendary(item);
+            case ItemName.BackstagePass:
+                return CalcQualityChange_BackstagePass(item);
+            case ItemName.ConjuredItem:
+                return CalcQualityChange_Conjured(item);
+            default:
+                return CalcQualityChange_Default(item);
+        }
+    }
+
+    private int CalcQualityChange_Default(Item item)
+    {
+        return item.SellIn > 0 ? -1 : -2;
+    }
+
+    private int CalcQualityChange_AgedBrie(Item item)
+    {
+        return item.SellIn > 0 ? 1 : 2;
+    }
+
+    private int CalcQualityChange_Legendary(Item item)
+    {
+        return 0;
+    }
+
+    private int CalcQualityChange_BackstagePass(Item item)
+    {
+        if (item.SellIn > 7)
+            return 1;
+        else if (item.SellIn > 2)
+            return 3;
+        else if (item.SellIn > 0)
+            return 4;
+        else
+            // I don't love this line - I would prefer to say "set quality to zero", rather than "subtract current quality".
+            // In a more complicated system, perhaps quality could change while we are calculating, so this does not end up setting it to zero.
+            return -item.Quality;
+    }
+
+    private int CalcQualityChange_Conjured(Item item)
+    {
+        return 2 * CalcQualityChange_Default(item);
     }
 }
