@@ -27,7 +27,7 @@ dotnet test
 
 ## Stage 1: Unit tests
 
-A TDD approach is particularly usedul for refactoring, so I began by writing unit tests for `GildedRose.UpdateQuality` to cover the requirements specified in the root readme. Apart from conjured items still needing to be implemented, this uncovered two bugs:
+A TDD approach is particularly useful for refactoring, so I began by writing unit tests for `GildedRose.UpdateQuality` to cover the requirements specified in the root readme. Apart from conjured items still needing to be implemented, this uncovered two bugs:
 
 - Quality was capped at 50, rather than 40.
 - Backstage passes decreased in quality when `SellIn` was greater than 7. The specification is a little unclear on this case but I interpretted it as saying that quality should increase by 1.
